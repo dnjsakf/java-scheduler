@@ -8,19 +8,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SQLiteManager {
-    
+	
     private final Logger LOGGER = LoggerFactory.getLogger(SQLiteManager.class);
-    
-    private Connection conn = null;
     
     private final String JDBC_DRIVER_MARIADB = "org.mariadb.jdbc.Driver";
     private final boolean AUTO_COMMIT = false;
     private final int VALID_TIMEOUT = 500;
-    
+
+    private Connection conn = null;
     private String url = null;
     
     public SQLiteManager(){
-        this.url = "jdbc:sqlite:src/db/chinook.db";
+        this.url = "jdbc:sqlite:resources/sqlite/chinook.db";
     }
     
     public void createConnection() {

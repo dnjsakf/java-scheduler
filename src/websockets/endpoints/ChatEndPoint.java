@@ -20,7 +20,7 @@ import javax.websocket.server.ServerEndpoint;
 import javax.websocket.server.ServerEndpointConfig;
 
 import common.Const;
-import websockets.WebSocket;
+import websockets.SocketManager;
 import websockets.common.JsonDecoder;
 import websockets.common.JsonEncoder;
 import websockets.exceptions.AlreadyUsedException;
@@ -46,7 +46,9 @@ public class ChatEndPoint {
     
     // For Development
     public static void main(String[] args) {
-        WebSocket.runServer();
+        SocketManager socket_m = new SocketManager();
+        
+        socket_m.runServer();
     }
     
     public String getRoom() {

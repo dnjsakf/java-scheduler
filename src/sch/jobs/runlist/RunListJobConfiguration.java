@@ -1,4 +1,4 @@
-package sch.jobs;
+package sch.jobs.runlist;
 
 import java.text.ParseException;
 
@@ -9,7 +9,7 @@ import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.TriggerBuilder;
 
-public class TestJobConfiguration {
+public class RunListJobConfiguration {
     
     private String jobName = null;
     private String jobGroup = null;
@@ -18,14 +18,14 @@ public class TestJobConfiguration {
     private JobDetail job = null;
     private CronTrigger trigger = null;
     
-    public TestJobConfiguration(String jobName, String jobGroup) {
+    public RunListJobConfiguration(String jobName, String jobGroup) {
         this.jobName = jobName;
         this.jobGroup = jobGroup;
         
         this.job = createJob(jobName, jobGroup);
     }
     
-    public TestJobConfiguration(String jobName, String jobGroup, String cron) throws ParseException {
+    public RunListJobConfiguration(String jobName, String jobGroup, String cron) throws ParseException {
         this.jobName = jobName;
         this.jobGroup = jobGroup;
         this.cron = cron;
@@ -35,7 +35,7 @@ public class TestJobConfiguration {
     }
     
     private JobDetail createJob(String jobName, String jobGroup){
-        job = JobBuilder.newJob(TestJob.class)
+        job = JobBuilder.newJob(RunListJob.class)
                 .withIdentity(jobName, jobGroup)
                 .build();
         return job;

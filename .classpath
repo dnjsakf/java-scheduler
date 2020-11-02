@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11">
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.launching.macosx.MacOSXType/jdk-11.0.9">
 		<attributes>
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/websocket"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/scheduler"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/logging"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/connectors"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/logging"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/scheduler"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/tyrus"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/utils"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/websocket"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

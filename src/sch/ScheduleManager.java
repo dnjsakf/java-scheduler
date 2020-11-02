@@ -10,29 +10,36 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import sch.jobs.TestJobConfiguration;
+import sch.jobs.runlist.RunListJobConfiguration;
 import sch.listeners.MyScheduleListener;
 import sch.listeners.MyTriggerListener;
 
-public class ScheduleManager {
+public class ScheduleManager extends Thread {
     
     private final Logger LOGGER = LoggerFactory.getLogger(ScheduleManager.class);
     
     private static StdSchedulerFactory fac = null;
     private static Scheduler sch = null;
     
-    public static void run() {
+    public ScheduleManager(){
         try {
             // Create Scheduler
-            fac = new StdSchedulerFactory("sch/quartz.properties");
+            fac = new StdSchedulerFactory("resources/quartz/quartz.properties");
             sch = fac.getScheduler();
             
             // Set Listeners
             sch.getListenerManager().addJobListener(new MyScheduleListener());
             sch.getListenerManager().addTriggerListener(new MyTriggerListener());
             
+        } catch ( SchedulerException e ) {
+            e.printStackTrace();
+        }
+    }
+    
+    public void run() {
+        try {
             // Create Job
-            TestJobConfiguration testJob = new TestJobConfiguration("LoggingTest", "test", "0/5 * * * * ?");
+            RunListJobConfiguration testJob = new RunListJobConfiguration("LoggingTest", "test", "0/5 * * * * ?");
             JobDetail job = testJob.getJob();
             CronTrigger trigger = testJob.getTrigger();
             
@@ -50,9 +57,5 @@ public class ScheduleManager {
                 e1.printStackTrace();
             }
         }
-    }
-    
-    public static void main(String[] args) {
-        run();
     }
 }
