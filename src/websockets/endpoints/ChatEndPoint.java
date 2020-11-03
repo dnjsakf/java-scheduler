@@ -19,8 +19,11 @@ import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import javax.websocket.server.ServerEndpointConfig;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import common.Const;
-import websockets.SocketManager;
+import websockets.SocketServerManager;
 import websockets.common.JsonDecoder;
 import websockets.common.JsonEncoder;
 import websockets.exceptions.AlreadyUsedException;
@@ -36,6 +39,11 @@ import websockets.models.Message;
     configurator = ChatEndPoint.Configurator.class
 )
 public class ChatEndPoint {
+    
+    private final Logger LOGGER = LoggerFactory.getLogger(ChatEndPoint.class);
+    
+    private final int MAX_IDLE_TIMEOUT = 60*1000;
+    private final int MAX_BINARY_MESSAGE_BUFFER_SIZE = 10*1024*1024;
  
     private static Set<ChatEndPoint> chatEndPoints = new CopyOnWriteArraySet<>();
     private static HashMap<String, String> users = new HashMap<>();
@@ -46,7 +54,7 @@ public class ChatEndPoint {
     
     // For Development
     public static void main(String[] args) {
-        SocketManager socket_m = new SocketManager();
+        SocketServerManager socket_m = new SocketServerManager();
         
         socket_m.runServer();
     }
@@ -83,77 +91,100 @@ public class ChatEndPoint {
     public void onOpen(
             final Session session,
             final @PathParam("room") String room
-        ) throws AlreadyUsedException, IOException, EncodeException {
+        ) throws IOException, EncodeException {
+        LOGGER.error(String.format("[onOpen][START]"));
         
         Map<String, String> queryParams = getQueryMap(session.getQueryString());
         String username = queryParams.get("username");
         
-        System.out.printf("Connecting... %s : %s : %s : %s\n", room, username, session.getId(), queryParams.toString());
+        LOGGER.info(String.format("Connecting..."));
+        LOGGER.info(String.format("%-10s:%s", "room", room));
+        LOGGER.info(String.format("%-10s:%s", "username", username));
+        //LOGGER.info(String.format("%-10s:%s", "username", URLDecoder.decode(username, "UTF-8")));
+        LOGGER.info(String.format("%-10s:%s", "session", session.getId()));
+        LOGGER.info(String.format("%-10s:%s", "params", queryParams.toString()));
         
-        // Check User
-        synchronized (chatEndPoints) {
-            synchronized (users) {
-                Iterator<ChatEndPoint> iter = chatEndPoints.iterator();
-                
-                while(iter.hasNext()) {
-                    ChatEndPoint other = iter.next();
-                                        
-                    if( other.getUsername().equals(username) ) {
-                        throw new AlreadyUsedException(Const.ERROR_ALREADY_USED_NAME_MESSAGE);
+        try {
+        
+            // Check User
+            synchronized (chatEndPoints) {
+                synchronized (users) {
+                    Iterator<ChatEndPoint> iter = chatEndPoints.iterator();
+                    
+                    while(iter.hasNext()) {
+                        ChatEndPoint other = iter.next();
+                                            
+                        if( other.getUsername().equals(username) ) {
+                            throw new AlreadyUsedException(Const.ERROR_ALREADY_USED_NAME_MESSAGE);
+                        }
                     }
+                    
+                    users.put(session.getId(), username);
                 }
-                
-                users.put(session.getId(), username);
+                chatEndPoints.add(this);
             }
-            chatEndPoints.add(this);
+            
+            // Save Session
+            session.setMaxIdleTimeout(MAX_IDLE_TIMEOUT);
+            session.setMaxBinaryMessageBufferSize(MAX_BINARY_MESSAGE_BUFFER_SIZE);
+            
+            this.session = session;
+            this.room = room;
+            this.username = username;
+            
+            // Create Message
+            Message message = new Message();
+            message.setFrom(Const.AGENT_NAME);
+            message.setContent("Connected!");
+            
+            LOGGER.info(String.format("Connected!!!"));
+            
+            // Send Message
+            // broadcast(message);
+        } catch ( AlreadyUsedException e ) {
+            CloseReason closeReason = new CloseReason(
+                CloseReason.CloseCodes.CANNOT_ACCEPT,
+                e.getMessage()
+            );
+            session.close(closeReason);
+            LOGGER.error(String.format("[onOpen][CLOSE] %s", closeReason.toString()));
+        } finally {
+            LOGGER.error(String.format("[onOpen][END]"));
         }
-
-        // Save Session
-        session.setMaxIdleTimeout(5*60*1000);
-        session.setMaxBinaryMessageBufferSize(10*1024*1024);
-        
-        this.session = session;
-        this.room = room;
-        this.username = username;
-        
-        // Create Message
-        Message message = new Message();
-        message.setFrom(Const.AGENT_NAME);
-        message.setContent("Connected!");
-        
-        System.out.printf("Connected!!! %s : %s\n", username, session.getId());
-        
-        // Send Message
-        // broadcast(message);
     }
     
     @OnClose
     public void onClose(final Session session, final CloseReason reason) throws IOException, EncodeException {
+        LOGGER.error(String.format("[onClose][START] %s", reason.toString()));
+        
         // Create Message
         Message message = new Message();
         message.setFrom(Const.AGENT_NAME);
         message.setContent("Disconnected!");
         
         // Clear Data
-        clearDatas();
+        //clearDatas();
 
         // Send Message
-        broadcast(message);
+        // broadcast(message);
         
         // Closed Session
-        session.close(reason);
+        // session.close(reason);
+        
+        LOGGER.error(String.format("[onClose][END]"));
     }
  
     @OnError
-    public void onError(final Session session, final Throwable throwable)  throws IOException, EncodeException {
+    public void onError(final Session session, final Throwable throwable)  throws Throwable {
+        LOGGER.error(String.format("[onError][START] %s", throwable.getMessage()));
+        
         if( !session.isOpen() ) {
+            LOGGER.error(String.format("[onError][END]"));
             return;
         }
         
         boolean closing = Const.ERROR_CLOSING;
         String content = throwable.getMessage();
-        
-        System.out.printf("[%s] error: %s\n", this.username, content);
         
         // Create Error Message
         ErrorMessage errorMessage = new ErrorMessage();
@@ -172,12 +203,16 @@ public class ChatEndPoint {
         }
         
         // Return Message
-        session.getBasicRemote().sendObject(errorMessage);
+        //session.getBasicRemote().sendObject(errorMessage);
         
         // Closed Session
-        if( closing ) {
-            session.close();
-        }
+//        if( closing ) {
+//            session.close();
+//        }
+        
+        LOGGER.error(String.format("[onError][END]"));
+        
+        throw throwable;
     }
     
     /**
@@ -190,7 +225,7 @@ public class ChatEndPoint {
      */
     @OnMessage
     public void onMessage(final Session session, final Message message) throws IOException, EncodeException {
-        System.out.printf("[%s] receive message: %s\n", this.username, message.toString());
+        LOGGER.info(String.format("[%s] receive message: %s\n", this.username, message.toString()));
         
         String to = message.getTo();
 //        String from = users.get(session.getId());
@@ -209,7 +244,7 @@ public class ChatEndPoint {
         chatEndPoints.forEach(endpoint -> {
             synchronized (endpoint) {
                 try {
-                    System.out.printf("Send To %s.\n", users.get(endpoint.session.getId()));
+                    LOGGER.info(String.format("Send To %s.\n", users.get(endpoint.session.getId())));
                     
                     endpoint.session.getBasicRemote().sendObject(message);
                     

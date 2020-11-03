@@ -7,7 +7,7 @@ import org.glassfish.tyrus.server.Server;
 
 import websockets.endpoints.ChatEndPoint;
 
-public class SocketManager extends Thread {
+public class SocketServerManager extends Thread {
 	
 	private final String HOST = "localhost";
 	private final int PORT = 3000;
@@ -15,7 +15,7 @@ public class SocketManager extends Thread {
 
 	private Server server = null;
 	
-	public SocketManager() {
+	public SocketServerManager() {
         this.server = new Server(HOST, PORT, ROOT_PATH, ChatEndPoint.class);
 	}
 
@@ -46,7 +46,7 @@ public class SocketManager extends Thread {
     }
 	
     public static void main(String[] args) {
-    	SocketManager socket_m = new SocketManager();
+    	SocketServerManager socket_m = new SocketServerManager();
     	
     	socket_m.runServer();
     }

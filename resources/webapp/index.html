@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Java HTTP Server</title>
+	</head>
+	<body>
+		<button id="connect">connect</button>
+		<div id="chat-container" class="chat-container">
+			<div id="message_wrapper" class="chat-message-wrapper">
+				<ul id="message_list" class="chat-message-list" max-size="30">
+				</ul>
+			</div>
+			<div>
+				<form id="send_message_form" method="GET">
+					<input id="username" name="username" value="anonymous" />
+					<input id="message" name="message" placeholder="Please send message..." />
+					<button type="submit">send</button>
+				</form>
+			</div>
+		</div>
+		<script src="js/sockets/client.js"></script>
+		<script>
+			const connBtn = document.querySelector("#connect");
+			const form = document.querySelector("#send_message_form");
+			
+			const chat = new ChatWS({
+			  url: "ws://localhost:3000",
+			  endpoint: "chat",
+			  room: "Dochi's Engine",
+			  protocol: [
+			    "chat-ws"
+			  ],
+			  form: form,
+			  //params: {
+			  //  username: "heo",
+			  //},
+			  //binaryType: "blob",
+			  onOpen: function(inst, event){
+			    console.group("onOpen");
+			    console.log(event);
+			    console.groupEnd("onOpen");
+			  },
+			  onMessage: function(inst, event){
+			    console.group("onMessage");
+			    console.log( inst.getConfig("params").username, ":", event.data );
+			    console.groupEnd("onMessage");
+			  },
+			  onClose: function(inst, event){
+			    console.group("onClose");
+			    console.log( inst.getConfig("params").username, ":", event );
+			    console.groupEnd("onClose");
+			  },
+			  onError: function(inst, error){
+			    console.group("onError");
+			    console.error( inst.getConfig("params").username, ":", error );
+			    inst.disconnect();
+			    console.groupEnd("onError");
+			  },
+			});
+			
+			form.addEventListener("submit", function(event){
+				event.preventDefault();
+
+			    const message = event.target.querySelector("input[name=message]");
+			    
+			    chat.send(message.value);
+			  
+			}, false);
+		    
+			connBtn.addEventListener("click", function(event){
+				event.preventDefault();
+
+		    	console.group("CONNECT");
+				console.log( chat.getState() );
+			    console.groupEnd("CONNECT");
+
+			    const username = form.querySelector("input[name=username]");
+				chat.connect({
+				  username: username.value
+				});
+				
+			}, false);
+		</script>
+	</body>		
+</html>
