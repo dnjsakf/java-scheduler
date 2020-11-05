@@ -1,4 +1,4 @@
-package web;
+package web.socket;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;

@@ -225,7 +225,7 @@ public class ChatEndPoint {
      */
     @OnMessage
     public void onMessage(final Session session, final Message message) throws IOException, EncodeException {
-        LOGGER.info(String.format("[%s] receive message: %s\n", this.username, message.toString()));
+        LOGGER.info(String.format("[%s] receive message: %s", this.username, message.toString()));
         
         String to = message.getTo();
 //        String from = users.get(session.getId());
@@ -244,7 +244,7 @@ public class ChatEndPoint {
         chatEndPoints.forEach(endpoint -> {
             synchronized (endpoint) {
                 try {
-                    LOGGER.info(String.format("Send To %s.\n", users.get(endpoint.session.getId())));
+                    LOGGER.info(String.format("Send To %s.", users.get(endpoint.session.getId())));
                     
                     endpoint.session.getBasicRemote().sendObject(message);
                     
